@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace lskysd.techinventory.lib
+namespace lskysd.techinventory
 {
     public class DeviceName
     {

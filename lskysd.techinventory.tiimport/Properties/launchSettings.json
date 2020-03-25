@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "tiimport": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "KEYVAULT_ENDPOINT": "https://lssd-techinventory.vault.azure.net/"
+      }
+    }
+  }
+}

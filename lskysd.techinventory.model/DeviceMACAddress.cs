@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace lskysd.techinventory.lib
+namespace lskysd.techinventory
 {
-    public class DeviceFacility
+    public class DeviceMACAddress
     {
         public int Id { get; set; }
         public int DeviceId { get; set; }
-        public int FacilityId { get; set; }
-        public Facility Facility { get; set; }
+        public string MACAddress { get; set; }
     }
 }
