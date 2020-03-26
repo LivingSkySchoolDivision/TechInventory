@@ -82,6 +82,7 @@ namespace lskysd.techinventory.db
             {
                 if (allDevicesBySerial.ContainsKey(newDevice.SerialNumber))
                 {
+                    newDevice.Id = allDevicesBySerial[newDevice.SerialNumber].Id;
                     if (allDevicesBySerial[newDevice.SerialNumber].NeedsUpdate(newDevice))
                     {
                         existingDevices.Add(newDevice);

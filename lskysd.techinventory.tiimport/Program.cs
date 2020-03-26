@@ -15,6 +15,7 @@ namespace lskysd.techinventory.tiimport
     {
         private static void ConsoleWrite(string message)
         {
+            
             Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm K") + ": " + message);
         }
 

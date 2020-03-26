@@ -61,6 +61,11 @@ namespace lskysd.techinventory.db
             return _cache.Values.OrderBy(x => x.Name).ToList();
         }
 
+        public Dictionary<int, DeviceType> GetAllDictionary()
+        {
+            return _cache;
+        }
+
         public DeviceType Get(int id)
         {
             if (_cache.ContainsKey(id))

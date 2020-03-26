@@ -7,8 +7,8 @@ namespace lskysd.techinventory.util
     public static class Parsers
     {
         // Date bounds of Microsoft SQL server
-        private static readonly DateTime dbMinDate = new DateTime(1753, 01, 01);
-        private static readonly DateTime dbMaxDate = new DateTime(9999, 12, 31);
+        public static readonly DateTime dbMinDate = new DateTime(1753, 01, 01);
+        public static readonly DateTime dbMaxDate = new DateTime(9999, 12, 31);
 
         /// <summary>
         /// Sanitize a DateTime object to be put in an MS SQL database. Microsoft SQL server's minumum and maximum dates are 

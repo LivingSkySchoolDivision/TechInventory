@@ -24,8 +24,6 @@ namespace lskysd.techinventory.importers
         {
             List<Device> importedDevices = new List<Device>();
 
-            Console.WriteLine("ConnStr: " + this._connstring);
-
             using (CsvReader csv = new CsvReader(csvData, CultureInfo.InvariantCulture))
             {
                 var fileFormatDefinition = new
@@ -47,6 +45,7 @@ namespace lskysd.techinventory.importers
                             Model = o.Model,
                             DeviceType = _deviceTypeIdentifier.IdentifyByModel(o.Model)
                         });
+
                     }
                 }
             }

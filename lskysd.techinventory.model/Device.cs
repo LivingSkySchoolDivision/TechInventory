@@ -1,4 +1,5 @@
-﻿using System;
+﻿using lskysd.techinventory.util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,24 +18,28 @@ namespace lskysd.techinventory
 
 
 
-        public bool NeedsUpdate(Device thisDevice)
+        public bool NeedsUpdate(Device comparedDevice)
         {
-            if (this.Id == thisDevice.Id)
+            
+            if(
+                (this.SerialNumber != comparedDevice.SerialNumber) ||
+                (this.Model != comparedDevice.Model)  ||
+                (
+                    (this.Notes != comparedDevice.Notes) && 
+                    (!string.IsNullOrEmpty(this.Notes) && !string.IsNullOrEmpty(comparedDevice.Notes))
+                ) ||
+                (
+                    (this.PurchaseDate != comparedDevice.PurchaseDate) && 
+                    (comparedDevice.PurchaseDate > Parsers.dbMinDate)
+                ) ||
+                (this.PurchaseYear != comparedDevice.PurchaseYear) ||
+                (this.IsActive != comparedDevice.IsActive) ||
+                (this.DeviceType.Id != comparedDevice.DeviceType.Id)
+                )
             {
-                if(
-                    (this.SerialNumber != thisDevice.SerialNumber) ||
-                    (this.Model != thisDevice.Model)  ||
-                    (this.Notes != thisDevice.Notes) ||
-                    (this.PurchaseDate != thisDevice.PurchaseDate) ||
-                    (this.PurchaseYear != this.PurchaseYear) ||
-                    (this.IsActive != thisDevice.IsActive) ||
-                    (this.DeviceType.Id != this.DeviceType.Id)
-                    )
-                {
-                    return true;
-                }
-            } 
-
+                return true;
+            }
+            
             return false;
         }
     }
