@@ -23,6 +23,9 @@ namespace lskysd.techinventory.importers
             Dictionary<string, Facility> DeviceFacilitiesBySerialNo
             )
         {
+            List<DeviceName> deviceNames = new List<DeviceName>();
+            List<DeviceFacility> deviceFacilities = new List<DeviceFacility>();
+
             Console.WriteLine("Devices to insert or update: " + Devices.Count);
 
             // First, determine device types
@@ -38,8 +41,27 @@ namespace lskysd.techinventory.importers
 
             // Get a list of all devices, because we'll need it to find ID numbers
             Dictionary<string, Device> allDevicesBySerial = deviceRepo.GetAll().ToDictionary(x => x.SerialNumber);
-            List<DeviceName> deviceNames = new List<DeviceName>();
+            
 
+            // Insert or update device facilities
+            Console.WriteLine(" Updating device facilities...");
+            foreach(KeyValuePair<string, Facility> df in DeviceFacilitiesBySerialNo)
+            {
+                if (allDevicesBySerial.ContainsKey(df.Key))
+                {
+                    deviceFacilities.Add(new DeviceFacility()
+                    {
+                        DeviceId = allDevicesBySerial[df.Key].Id,
+                        Facility = df.Value
+                    });
+                }
+            }
+            DeviceFacilityRepository deviceFacilityrepo = new DeviceFacilityRepository(this._connstring);
+            deviceFacilityrepo.Add(deviceFacilities);
+
+
+            // Insert or update device names
+            Console.WriteLine(" Updating device names...");
             foreach (KeyValuePair<string, string> deviceName in DeviceNamesBySerialNo)
             {
                 if (allDevicesBySerial.ContainsKey(deviceName.Key))
@@ -51,19 +73,11 @@ namespace lskysd.techinventory.importers
                     });
                 }
             }
-
-            // Insert or update device facilities
-            Console.WriteLine(" Updating device facilities...");
-            Console.WriteLine("  N.Y.I.");
-
-            // Insert or update device names
-            Console.WriteLine(" Updating device names...");
             DeviceNameRepository deviceNameRepo = new DeviceNameRepository(this._connstring);
             deviceNameRepo.Add(deviceNames);
 
+
             // Insert or update device MAC addresses
-
-
 
         }
     }
