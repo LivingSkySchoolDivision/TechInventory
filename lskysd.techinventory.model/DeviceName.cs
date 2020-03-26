@@ -9,5 +9,10 @@ namespace lskysd.techinventory
         public int Id { get; set; }
         public int DeviceId { get; set; }
         public string Value { get; set; }
+
+        public override string ToString()
+        {
+            return this.Value;
+        }
     }
 }
