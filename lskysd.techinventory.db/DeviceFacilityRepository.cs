@@ -18,6 +18,12 @@ namespace lskysd.techinventory.db
             this._facilityRepo = new FacilityRepository(ConnectionString);
         }
 
+        public DeviceFacilityRepository(string ConnectionString, FacilityRepository FacilityRepo)
+        {
+            this._connString = ConnectionString;
+            this._facilityRepo = FacilityRepo;
+        }
+
         private DeviceFacility dataReaderToObject(SqlDataReader dataReader)
         {
             return new DeviceFacility()

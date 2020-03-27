@@ -1,26 +1,23 @@
 ﻿using CsvHelper;
+using lskysd.techinventory.db;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
+using System.Text;
 
 namespace lskysd.techinventory.importers
 {
-    public class MerakiCSVImporter
+    public class GoogleCSVImporter
     {
         private readonly string _connstring = string.Empty;
 
-        public MerakiCSVImporter(string connectionString)
+        public GoogleCSVImporter(string connectionString)
         {
             this._connstring = connectionString;
         }
 
-        public void Import(StreamReader csvData, Facility Facility)
-        {
-            Import(csvData, Facility.Name);
-        }
-
-        public void Import(StreamReader csvData, string FacilityName)
+        public void Import(StreamReader csvData)
         {
             List<Device> parsedDevices = new List<Device>();
             Dictionary<string, string> detectedNamesBySerial = new Dictionary<string, string>();
@@ -30,46 +27,56 @@ namespace lskysd.techinventory.importers
             {
                 var fileFormatDefinition = new
                 {
-                    Name = string.Empty,
-                    Model = string.Empty,
-                    Serial = string.Empty
+                    serialNumber = string.Empty,
+                    model = string.Empty,
+                    annotatedLocation = string.Empty,
+                    annotatedAssetId = string.Empty,
+                    ethernetMacAddress = string.Empty,
+                    macAddress = string.Empty
                 };
+
 
                 var records = csv.GetRecords(fileFormatDefinition);
 
                 foreach (var o in records)
                 {
-                    if (!string.IsNullOrEmpty(o.Serial))
+                    if (!string.IsNullOrEmpty(o.serialNumber))
                     {
                         // Extract the device records
                         parsedDevices.Add(new Device()
                         {
-                            SerialNumber = o.Serial,
-                            Model = o.Model
+                            SerialNumber = o.serialNumber,
+                            Model = o.model
                         });
 
                         // Extract device names
-                        if (!detectedNamesBySerial.ContainsKey(o.Serial))
+                        if (!detectedNamesBySerial.ContainsKey(o.annotatedAssetId))
                         {
-                            detectedNamesBySerial.Add(o.Serial, o.Name);
+                            detectedNamesBySerial.Add(o.serialNumber, o.annotatedAssetId);
                         }
 
                         // Extract the facility records
-                        if (!detectedFacilitiesBySerial.ContainsKey(o.Serial))
+                        if (!detectedFacilitiesBySerial.ContainsKey(o.annotatedLocation))
                         {
-                            detectedFacilitiesBySerial.Add(o.Serial, FacilityName);
+                            detectedFacilitiesBySerial.Add(o.serialNumber, o.annotatedLocation);
                         }
+
+                        // Extract the MAC addresses
+
                     }
+                    
                 }
             }
-
+            
             ImportHandler importHandler = new ImportHandler(_connstring);
             importHandler.Import(
                 parsedDevices,
                 detectedNamesBySerial,
                 detectedFacilitiesBySerial
                 );
-
         }
+
+
+
     }
 }

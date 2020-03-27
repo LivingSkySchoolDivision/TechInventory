@@ -20,7 +20,7 @@ namespace lskysd.techinventory.importers
         public void Import(
             List<Device> Devices,
             Dictionary<string, string> DeviceNamesBySerialNo,
-            Dictionary<string, Facility> DeviceFacilitiesBySerialNo
+            Dictionary<string, string> DeviceFacilitiesBySerialNo
             )
         {
             List<DeviceName> deviceNames = new List<DeviceName>();
@@ -45,18 +45,22 @@ namespace lskysd.techinventory.importers
 
             // Insert or update device facilities
             Console.WriteLine(" Updating device facilities...");
-            foreach(KeyValuePair<string, Facility> df in DeviceFacilitiesBySerialNo)
+            FacilityRepository facilityRepo = new FacilityRepository(this._connstring);
+
+            foreach(KeyValuePair<string, string> df in DeviceFacilitiesBySerialNo)
             {
                 if (allDevicesBySerial.ContainsKey(df.Key))
                 {
+                    Facility f = facilityRepo.GetByName(df.Value);
+                    if (f.Id == 0) { Console.WriteLine("Unknown facility: " + df.Value); }
                     deviceFacilities.Add(new DeviceFacility()
                     {
                         DeviceId = allDevicesBySerial[df.Key].Id,
-                        Facility = df.Value
-                    });
+                        Facility = f
+                    }); ;
                 }
             }
-            DeviceFacilityRepository deviceFacilityrepo = new DeviceFacilityRepository(this._connstring);
+            DeviceFacilityRepository deviceFacilityrepo = new DeviceFacilityRepository(this._connstring, facilityRepo);
             deviceFacilityrepo.Add(deviceFacilities);
 
 

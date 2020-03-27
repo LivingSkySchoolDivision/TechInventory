@@ -54,18 +54,18 @@ namespace lskysd.techinventory.tiimport
                 // Facility
 
                 // Attempt to import a CSV
-                string fileName = "Macklin.csv";
+                string fileName = "google.csv";
                 Facility facility = new Facility()
                 {
                     Id = 15,
                     Name = "Macklin"
                 };
 
-                MerakiCSVImporter importer = new MerakiCSVImporter(dbConnectionString);
+                GoogleCSVImporter importer = new GoogleCSVImporter(dbConnectionString);
 
                 using (StreamReader streamReader = new StreamReader(fileName))
                 {
-                    importer.Import(streamReader, facility);
+                    importer.Import(streamReader);
                 }
             }
            

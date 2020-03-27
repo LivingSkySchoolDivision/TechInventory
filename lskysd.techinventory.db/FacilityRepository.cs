@@ -11,11 +11,12 @@ namespace lskysd.techinventory.db
     {
         private string _connString = string.Empty;
         private Dictionary<int, Facility> _cache = new Dictionary<int, Facility>();
+        private Dictionary<string, Facility> _nameCache = new Dictionary<string, Facility>();
 
         public FacilityRepository(string ConnectionString)
         {
             this._connString = ConnectionString;
-
+            _nameCache.Clear();
             _cache.Clear();
             using (SqlConnection connection = new SqlConnection(this._connString))
             {
@@ -37,6 +38,20 @@ namespace lskysd.techinventory.db
                             if (obj != null)
                             {
                                 _cache.Add(obj.Id, obj);
+
+                                // Create an index of names and alt names for easier searching
+                                if (!this._nameCache.ContainsKey(obj.Name.ToLower()))
+                                {
+                                    this._nameCache.Add(obj.Name.ToLower(), obj);
+                                }
+
+                                foreach(string name in obj.AlternateNames)
+                                {
+                                    if (!this._nameCache.ContainsKey(name.ToLower()))
+                                    {
+                                        this._nameCache.Add(name.ToLower(), obj);
+                                    }
+                                }
                             }
                         }
                     }
@@ -45,15 +60,43 @@ namespace lskysd.techinventory.db
                 }
             }
 
+
         }
 
         private Facility dataReaderToObject(SqlDataReader dataReader)
         {
+            List<string> alternateNames = new List<string>();
+
+            foreach(string name in dataReader["alternatenames"].ToString().Split(';'))
+            {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    if (name.Length > 1)
+                    {
+                        if (!alternateNames.Contains(name))
+                        {
+                            alternateNames.Add(name);
+                        }
+                    }
+                }
+            }
+
             return new Facility()
             {
                 Id = dataReader["ID"].ToString().ToInt(),
-                Name = dataReader["Name"].ToString()
+                Name = dataReader["Name"].ToString(),
+                AlternateNames = alternateNames
             };
+        }
+
+        public Facility GetByName(string name)
+        {
+            if (this._nameCache.ContainsKey(name.ToLower()))
+            {
+                return this._nameCache[name.ToLower()];
+            }
+
+            return Facility.Unknown;
         }
 
         public Facility Get(int id)
