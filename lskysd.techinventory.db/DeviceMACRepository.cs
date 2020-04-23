@@ -7,28 +7,29 @@ using System.Text;
 
 namespace lskysd.techinventory.db
 {
-    public class DeviceNameRepository
+    public class DeviceMACRepository
     {
         private string _connString = string.Empty;
 
-        public DeviceNameRepository(string ConnectionString)
+        public DeviceMACRepository(string ConnectionString)
         {
             this._connString = ConnectionString;
         }
 
-        private DeviceName dataReaderToObject(SqlDataReader dataReader)
+        private DeviceMACAddress dataReaderToObject(SqlDataReader dataReader)
         {
-            return new DeviceName()
+            return new DeviceMACAddress()
             {
                 Id = dataReader["ID"].ToString().ToInt(),
-                DeviceId = dataReader["DeviceId"].ToString().ToInt(),
-                Value = dataReader["Value"].ToString()
+                DeviceId = dataReader["DeviceID"].ToString().ToInt(),
+                MACAddress = dataReader["MAC"].ToString()
             };
         }
 
-        public List<DeviceName> GetAll()
+
+        public List<DeviceMACAddress> GetAll()
         {
-            List<DeviceName> returnMe = new List<DeviceName>();
+            List<DeviceMACAddress> returnMe = new List<DeviceMACAddress>();
 
             using (SqlConnection connection = new SqlConnection(this._connString))
             {
@@ -36,7 +37,7 @@ namespace lskysd.techinventory.db
                 {
                     Connection = connection,
                     CommandType = CommandType.Text,
-                    CommandText = "SELECT * FROM DeviceNames;"
+                    CommandText = "SELECT * FROM DeviceMACAddresses;"
                 })
                 {
                     sqlCommand.Connection.Open();
@@ -46,7 +47,7 @@ namespace lskysd.techinventory.db
                     {
                         while (dbDataReader.Read())
                         {
-                            DeviceName obj = dataReaderToObject(dbDataReader);
+                            DeviceMACAddress obj = dataReaderToObject(dbDataReader);
                             if (obj != null)
                             {
                                 returnMe.Add(obj);
@@ -63,14 +64,14 @@ namespace lskysd.techinventory.db
         private Dictionary<int, List<string>> getAllDictionary()
         {
             Dictionary<int, List<string>> returnMe = new Dictionary<int, List<string>>();
-            
+
             using (SqlConnection connection = new SqlConnection(this._connString))
             {
                 using (SqlCommand sqlCommand = new SqlCommand
                 {
                     Connection = connection,
                     CommandType = CommandType.Text,
-                    CommandText = "SELECT * FROM DeviceNames;"
+                    CommandText = "SELECT * FROM DeviceMACAddresses;"
                 })
                 {
                     sqlCommand.Connection.Open();
@@ -80,7 +81,7 @@ namespace lskysd.techinventory.db
                     {
                         while (dbDataReader.Read())
                         {
-                            DeviceName obj = dataReaderToObject(dbDataReader);
+                            DeviceMACAddress obj = dataReaderToObject(dbDataReader);
                             if (obj != null)
                             {
                                 if (!returnMe.ContainsKey(obj.DeviceId))
@@ -88,7 +89,7 @@ namespace lskysd.techinventory.db
                                     returnMe.Add(obj.DeviceId, new List<string>());
                                 }
 
-                                returnMe[obj.DeviceId].Add(obj.Value);
+                                returnMe[obj.DeviceId].Add(obj.MACAddress);
                             }
                         }
                     }
@@ -100,44 +101,45 @@ namespace lskysd.techinventory.db
             return returnMe;
         }
 
-        public void Add(List<DeviceName> DeviceNames)
+        public void Add(List<DeviceMACAddress> DeviceMACAddresses)
         {
-            // Check to make sure this combination doesn't already exist, and if it does, skip it
+            // Check to make sure this combination doesn't alrady exist, and if it does, skip it
+            List<DeviceMACAddress> additions = new List<DeviceMACAddress>();
             Dictionary<int, List<string>> existingMappings = this.getAllDictionary();
-            List<DeviceName> additions = new List<DeviceName>();
 
-            foreach(DeviceName potentialAddition in DeviceNames)
+            foreach (DeviceMACAddress potentialAddition in DeviceMACAddresses)
             {
                 if (existingMappings.ContainsKey(potentialAddition.DeviceId))
                 {
-                    if (existingMappings[potentialAddition.DeviceId].Contains(potentialAddition.Value))  {
+                    if (existingMappings[potentialAddition.DeviceId].Contains(potentialAddition.MACAddress))
+                    {
                         continue;
                     }
                 }
                 additions.Add(potentialAddition);
             }
-            
+
             using (SqlConnection connection = new SqlConnection(this._connString))
             {
-                foreach (DeviceName deviceName in additions)
+                foreach (DeviceMACAddress deviceMAC in additions)
                 {
                     using (SqlCommand sqlCommand = new SqlCommand
                     {
                         Connection = connection,
                         CommandType = CommandType.Text,
-                        CommandText = "INSERT INTO DeviceNames(DeviceID, Value) " +
-                                        "VALUES(@DEVICEID, @NAMEVALUE);"
+                        CommandText = "INSERT INTO DeviceMACAddresses(DeviceID, MAC) " +
+                                        "VALUES(@DEVICEID, @MACVALUE);"
                     })
                     {
-                        sqlCommand.Parameters.AddWithValue("@DEVICEID", deviceName.DeviceId);
-                        sqlCommand.Parameters.AddWithValue("@NAMEVALUE", deviceName.Value);
+                        sqlCommand.Parameters.AddWithValue("@DEVICEID", deviceMAC.DeviceId);
+                        sqlCommand.Parameters.AddWithValue("@MACVALUE", deviceMAC.MACAddress);
                         sqlCommand.Connection.Open();
                         sqlCommand.ExecuteNonQuery();
                         sqlCommand.Connection.Close();
                     }
                 }
             }
-            
+
         }
 
     }

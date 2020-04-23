@@ -23,8 +23,9 @@ namespace lskysd.techinventory.importers
         public void Import(StreamReader csvData, string FacilityName)
         {
             List<Device> parsedDevices = new List<Device>();
-            Dictionary<string, string> detectedNamesBySerial = new Dictionary<string, string>();
-            Dictionary<string, string> detectedFacilitiesBySerial = new Dictionary<string, string>();
+            Dictionary<string, List<string>> detectedNamesBySerial = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> detectedFacilitiesBySerial = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> detectedMACsBySerial = new Dictionary<string, List<string>>();
 
             using (CsvReader csv = new CsvReader(csvData, CultureInfo.InvariantCulture))
             {
@@ -49,16 +50,24 @@ namespace lskysd.techinventory.importers
                         });
 
                         // Extract device names
-                        if (!detectedNamesBySerial.ContainsKey(o.Serial))
+                        if (!string.IsNullOrEmpty(o.Name))
                         {
-                            detectedNamesBySerial.Add(o.Serial, o.Name);
-                        }
+                            if (!detectedNamesBySerial.ContainsKey(o.Serial))
+                            {
+                                detectedNamesBySerial.Add(o.Serial, new List<string>());
+                            }
+                            if (!detectedNamesBySerial[o.Serial].Contains(o.Name))
+                            {
+                                detectedNamesBySerial[o.Serial].Add(o.Name);
+                            }
 
-                        // Extract the facility records
-                        if (!detectedFacilitiesBySerial.ContainsKey(o.Serial))
-                        {
-                            detectedFacilitiesBySerial.Add(o.Serial, FacilityName);
+                            // Extract the facility records (all the same for Meraki, because 1 CSV = 1 location
+                            if (!detectedFacilitiesBySerial.ContainsKey(o.Serial))
+                            {
+                                detectedFacilitiesBySerial.Add(o.Serial, new List<string>() { FacilityName });
+                            }
                         }
+                        
                     }
                 }
             }
@@ -67,7 +76,8 @@ namespace lskysd.techinventory.importers
             importHandler.Import(
                 parsedDevices,
                 detectedNamesBySerial,
-                detectedFacilitiesBySerial
+                detectedFacilitiesBySerial,
+                detectedMACsBySerial
                 );
 
         }

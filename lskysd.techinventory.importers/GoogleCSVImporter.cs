@@ -17,11 +17,33 @@ namespace lskysd.techinventory.importers
             this._connstring = connectionString;
         }
 
+        private string parseOrgUnitPath(string orgUnitPath)
+        {
+            if (string.IsNullOrEmpty(orgUnitPath))
+            {
+                return string.Empty;
+            }
+
+            // If the first character is a '/', remove it
+            // Grab up until the next '/', so we only get the first section
+            StringBuilder returnMe = new StringBuilder(orgUnitPath);
+            
+            if (returnMe[0] == '/')
+            {
+                returnMe.Remove(0, 1);
+            }
+
+            return returnMe.ToString();
+        }
+
         public void Import(StreamReader csvData)
         {
             List<Device> parsedDevices = new List<Device>();
-            Dictionary<string, string> detectedNamesBySerial = new Dictionary<string, string>();
-            Dictionary<string, string> detectedFacilitiesBySerial = new Dictionary<string, string>();
+
+            // the first string for all of these needs to be the serial no of the device
+            Dictionary<string, List<string>> detectedNamesBySerial = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> detectedFacilitiesBySerial = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> detectedMACsBySerial = new Dictionary<string, List<string>>();
 
             using (CsvReader csv = new CsvReader(csvData, CultureInfo.InvariantCulture))
             {
@@ -29,6 +51,7 @@ namespace lskysd.techinventory.importers
                 {
                     serialNumber = string.Empty,
                     model = string.Empty,
+                    orgUnitPath = string.Empty,
                     annotatedLocation = string.Empty,
                     annotatedAssetId = string.Empty,
                     ethernetMacAddress = string.Empty,
@@ -50,18 +73,48 @@ namespace lskysd.techinventory.importers
                         });
 
                         // Extract device names
-                        if (!detectedNamesBySerial.ContainsKey(o.annotatedAssetId))
+                        if (!string.IsNullOrEmpty(o.annotatedAssetId)) 
                         {
-                            detectedNamesBySerial.Add(o.serialNumber, o.annotatedAssetId);
+                            if (!detectedNamesBySerial.ContainsKey(o.serialNumber))
+                            {
+                                detectedNamesBySerial.Add(o.serialNumber, new List<string>());
+                            }
+
+                            if (!detectedNamesBySerial[o.serialNumber].Contains(o.annotatedAssetId))
+                            {
+                                detectedNamesBySerial[o.serialNumber].Add(o.annotatedAssetId);
+                            }
                         }
 
                         // Extract the facility records
-                        if (!detectedFacilitiesBySerial.ContainsKey(o.annotatedLocation))
+                        string thisDeviceFacility = parseOrgUnitPath(o.orgUnitPath);
+                        if (!string.IsNullOrEmpty(thisDeviceFacility))
                         {
-                            detectedFacilitiesBySerial.Add(o.serialNumber, o.annotatedLocation);
+                            if (!detectedFacilitiesBySerial.ContainsKey(o.serialNumber))
+                            {
+                                detectedFacilitiesBySerial.Add(o.serialNumber, new List<string>());
+                            }
+
+                            if (!detectedFacilitiesBySerial[o.serialNumber].Contains(thisDeviceFacility))
+                            {
+                                detectedFacilitiesBySerial[o.serialNumber].Add(thisDeviceFacility);
+
+                            }
                         }
 
                         // Extract the MAC addresses
+                        if (!string.IsNullOrEmpty(o.macAddress))
+                        {
+                            if (!detectedMACsBySerial.ContainsKey(o.serialNumber))
+                            { 
+                                detectedMACsBySerial.Add(o.serialNumber, new List<string>());
+                            }
+
+                            if (!detectedMACsBySerial[o.serialNumber].Contains(o.macAddress))
+                            {
+                                detectedMACsBySerial[o.serialNumber].Add(o.macAddress);
+                            }
+                        }
 
                     }
                     
@@ -72,7 +125,8 @@ namespace lskysd.techinventory.importers
             importHandler.Import(
                 parsedDevices,
                 detectedNamesBySerial,
-                detectedFacilitiesBySerial
+                detectedFacilitiesBySerial,
+                detectedMACsBySerial
                 );
         }
 

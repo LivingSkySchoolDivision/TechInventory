@@ -19,12 +19,14 @@ namespace lskysd.techinventory.importers
 
         public void Import(
             List<Device> Devices,
-            Dictionary<string, string> DeviceNamesBySerialNo,
-            Dictionary<string, string> DeviceFacilitiesBySerialNo
+            Dictionary<string, List<string>> DeviceNamesBySerialNo, // Serial, Name
+            Dictionary<string, List<string>> DeviceFacilitiesBySerialNo, // Serial, Facility
+            Dictionary<string, List<string>> DeviceMACsByserialNo // Serial, MAC
             )
         {
             List<DeviceName> deviceNames = new List<DeviceName>();
             List<DeviceFacility> deviceFacilities = new List<DeviceFacility>();
+            List<DeviceMACAddress> deviceMACs = new List<DeviceMACAddress>();
 
             Console.WriteLine("Devices to insert or update: " + Devices.Count);
 
@@ -47,17 +49,19 @@ namespace lskysd.techinventory.importers
             Console.WriteLine(" Updating device facilities...");
             FacilityRepository facilityRepo = new FacilityRepository(this._connstring);
 
-            foreach(KeyValuePair<string, string> df in DeviceFacilitiesBySerialNo)
+            foreach(KeyValuePair<string, List<string>> df in DeviceFacilitiesBySerialNo)
             {
-                if (allDevicesBySerial.ContainsKey(df.Key))
+                if (allDevicesBySerial.ContainsKey(df.Key)) 
                 {
-                    Facility f = facilityRepo.GetByName(df.Value);
-                    if (f.Id == 0) { Console.WriteLine("Unknown facility: " + df.Value); }
-                    deviceFacilities.Add(new DeviceFacility()
+                    foreach (string val in df.Value)
                     {
-                        DeviceId = allDevicesBySerial[df.Key].Id,
-                        Facility = f
-                    }); ;
+                        Facility f = facilityRepo.GetByName(val);
+                        deviceFacilities.Add(new DeviceFacility()
+                        {
+                            DeviceId = allDevicesBySerial[df.Key].Id,
+                            Facility = f
+                        }); ;
+                    }
                 }
             }
             DeviceFacilityRepository deviceFacilityrepo = new DeviceFacilityRepository(this._connstring, facilityRepo);
@@ -66,15 +70,18 @@ namespace lskysd.techinventory.importers
 
             // Insert or update device names
             Console.WriteLine(" Updating device names...");
-            foreach (KeyValuePair<string, string> deviceName in DeviceNamesBySerialNo)
+            foreach (KeyValuePair<string, List<string>> deviceName in DeviceNamesBySerialNo)
             {
-                if (allDevicesBySerial.ContainsKey(deviceName.Key))
+                if (allDevicesBySerial.ContainsKey(deviceName.Key)) 
                 {
-                    deviceNames.Add(new DeviceName()
+                    foreach (string val in deviceName.Value)
                     {
-                        DeviceId = allDevicesBySerial[deviceName.Key].Id,
-                        Value = deviceName.Value
-                    });
+                        deviceNames.Add(new DeviceName()
+                        {
+                            DeviceId = allDevicesBySerial[deviceName.Key].Id,
+                            Value = val
+                        });
+                    }
                 }
             }
             DeviceNameRepository deviceNameRepo = new DeviceNameRepository(this._connstring);
@@ -82,6 +89,23 @@ namespace lskysd.techinventory.importers
 
 
             // Insert or update device MAC addresses
+            Console.WriteLine(" Updating MAC Addresses...");
+            foreach(KeyValuePair<string, List<string>> deviceMAC in DeviceMACsByserialNo)
+            {
+                if (allDevicesBySerial.ContainsKey(deviceMAC.Key)) 
+                {
+                    foreach (string val in deviceMAC.Value)
+                    {
+                        deviceMACs.Add(new DeviceMACAddress()
+                        {
+                            DeviceId = allDevicesBySerial[deviceMAC.Key].Id,
+                            MACAddress = val
+                        });
+                    }
+                }
+            }
+            DeviceMACRepository macRepo = new DeviceMACRepository(this._connstring);
+            macRepo.Add(deviceMACs);
 
         }
     }
